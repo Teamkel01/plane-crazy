@@ -4,7 +4,6 @@ local plr = game.Players.LocalPlayer
 local hrp = plr.Character.HumanoidRootPart
 local nodeconnection = {9, 0, 1, 2, 3, 0, 5, 6, 7, 0, 9, 10, 11, 0, 13, 14, 15, 0, 17, 18, 19}
 
--- Random string generation function
 function RandomVariable(length)
     local res = ""
     for i = 1, length do
@@ -16,7 +15,6 @@ end
 local DoCheck = RandomVariable(20)
 _G.DoCheck = DoCheck
 
--- String split function
 function Split(s, delimiter)
     local result = {}
     for match in (s .. delimiter):gmatch("(.-)" .. delimiter) do
@@ -25,7 +23,6 @@ function Split(s, delimiter)
     return result
 end
 
--- Add gravity force to parts
 local function zeroGrav(part)
     if not part:FindFirstChild("BodyForce") then 
         local temp = Instance.new("BodyForce")
@@ -59,7 +56,7 @@ while _G.Enabled do
         break
     end
     task.wait(.03)
-    local r = game:HttpGet("http://192.168.0.248:5050/")  -- Change to your server's IP and port
+    local r = game:HttpGet("http://192.168.0.167:8080/")
     
     -- Print raw data received from server
     print("Raw data received: " .. r)
@@ -75,11 +72,11 @@ while _G.Enabled do
             break
         end
 
-        local connectionNode = nodeconnection[index]
-        local connectedNode = nodes[connectionNode + 1]
+        local connectionIndex = nodeconnection[index]
+        local connectedNode = nodes[connectionIndex + 1]
 
         if not connectedNode then
-            print("Connected node not found for index: " .. connectionNode + 1)
+            print("Connected node not found for index: " .. connectionIndex + 1)
         end
         
         local newPos = hrp.Position + Vector3.new(tonumber(data[3]) / 3, tonumber(data[4]) / 3, tonumber(data[2]) / 3) + Vector3.new(-70, 100, -150)
@@ -114,6 +111,21 @@ while _G.Enabled do
             bp.P = 25000
             bp.D = 1000
             bp.Position = newPos
+        end
+    end
+
+    -- Handle joints separately
+    for _, joint in pairs(joints) do
+        -- Assuming joints are also controlled by the same data (you may need to adapt this)
+        local jointIndex = table.find(nodes, joint)  -- Find index of the joint in nodes
+        if jointIndex then
+            local connectionIndex = nodeconnection[jointIndex]
+            local connectedNode = nodes[connectionIndex + 1]
+
+            if connectedNode then
+                local jointPos = hrp.Position + Vector3.new(data[3] / 3, data[4] / 3, data[2] / 3) + Vector3.new(-70, 100, -150)
+                joint.Position = jointPos
+            end
         end
     end
 end
