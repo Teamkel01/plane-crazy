@@ -3,40 +3,36 @@ local plr = game.Players.LocalPlayer
 local hrp = plr.Character.HumanoidRootPart
 local nodeconnection = {9, 0, 1, 2, 3, 0, 5, 6, 7, 0, 9, 10, 11, 0, 13, 14, 15, 0, 17, 18, 19}
 
--- Generate a random string
 function RandomVariable(length)
-    local res = ""
-    for i = 1, length do
-        res = res .. string.char(math.random(97, 122))
-    end
-    return res
+	local res = ""
+	for i = 1, length do
+		res = res .. string.char(math.random(97, 122))
+	end
+	return res
 end
-
 local DoCheck = RandomVariable(20)
 _G.DoCheck = DoCheck
 
--- Split a string by delimiter
 function Split(s, delimiter)
-    local result = {}
-    for match in (s .. delimiter):gmatch("(.-)" .. delimiter) do
-        table.insert(result, match)
+    result = {};
+    for match in (s..delimiter):gmatch("(.-)"..delimiter) do
+        table.insert(result, match);
     end
-    return result
+    return result;
 end
 
--- Add gravity force to parts
+
 local function zeroGrav(part)
     if not part:FindFirstChild("BodyForce") then 
         local temp = Instance.new("BodyForce")
-        temp.Force = part:GetMass() * Vector3.new(0, workspace.Gravity, 0)
+        temp.Force = part:GetMass() * Vector3.new(0,workspace.Gravity,0)
         temp.Parent = part
     end
 end
 
--- Initialize nodes
 _G.Enabled = true
 if _G.Enabled then
-    for i = 0, 20, 1 do
+    for i=0, 20, 1 do -- deeply sorry for this crime
         for _, v in pairs(game.Workspace[plr.Name .. "Aircraft"]:GetDescendants()) do
             if v:IsA("BasePart") then
                 if v.Color == Color3.fromRGB(i, i, i) then
@@ -50,64 +46,34 @@ if _G.Enabled then
     end
 end
 
-local previousPositions = {}
-
 while _G.Enabled do
     if _G.DoCheck ~= DoCheck then
         break
     end
     task.wait(.03)
-    local r = game:HttpGet("http://192.168.0.167:8080/")
-    
-    -- Print raw data received from server
-    print("Raw data received: " .. r)
-
+    local r = game:HttpGet("http://192.168.0.248:8080/")
     for c, node in pairs(Split(r, "B")) do
         local data = Split(node, " ")
-        local index = tonumber(data[1]) + 1
-        local anode = nodes[index]
-
-        if anode then
-            local newPos = hrp.Position + Vector3.new(tonumber(data[3]) / 3, tonumber(data[4]) / 3, tonumber(data[2]) / 3) + Vector3.new(-70, 100, -150)
-            local connectionIndex = nodeconnection[index]
-            local connectedNode = nodes[connectionIndex + 1]
-            local tolookat = connectedNode and CFrame.lookAt(anode.Position, connectedNode.Position) or anode.CFrame
-
-            -- Calculate velocity
-            local velocity = Vector3.new()
-            if previousPositions[index] then
-                velocity = (newPos - previousPositions[index]) / 0.03 -- assuming 0.03 seconds between updates
-            end
-            previousPositions[index] = newPos
-            
-            -- Print details for debugging
-            print("Node Index: " .. index)
-            print("New Position: " .. tostring(newPos))
-            print("Velocity: " .. tostring(velocity))
-            
-            -- Update movement
-            if anode:FindFirstChild("bbbg") then
-                anode.bbbg.CFrame = tolookat
-                anode.bbbp.Position = newPos
-            else
-                -- Create BodyGyro and BodyPosition if they don't exist
-                local bg = Instance.new("BodyGyro")
-                bg.Parent = anode
-                bg.Name = "bbbg"
-                bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-                bg.D = 100
-                bg.CFrame = tolookat
-                
-                local bp = Instance.new("BodyPosition")
-                bp.Parent = anode
-                bp.Name = "bbbp"
-                bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                bp.P = 25000
-                bp.D = 1000
-                bp.Position = newPos
-            end
+        local anode = nodes[data[1] + 1]
+        local pos = hrp.Position + Vector3.new(data[3] / 3, data[4] / 3, data[2] / 3) + Vector3.new(-70, 100, -150)
+        local tolookat = CFrame.lookAt(anode.Position, nodes[nodeconnection[data[1] + 1] + 1].Position)
+        if anode:FindFirstChild("bbbg") then
+            anode.bbbg.CFrame = tolookat
+            anode.bbbp.Position = pos
         else
-            print("Node not found for index: " .. index)
+            local bg = Instance.new("BodyGyro")
+            bg.Parent = anode
+            bg.Name = "bbbg"
+            bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            bg.D = 100
+            bg.CFrame = tolookat
+            local bp = Instance.new("BodyPosition")
+            bp.Parent = anode
+            bp.Name = "bbbp"
+            bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bp.P = 25000
+            bp.D = 1000
+            bp.Position = pos
         end
     end
 end
