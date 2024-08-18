@@ -7,50 +7,11 @@ function update(text)
     workspace.Stalls.Stall2.Edit:FireServer(unpack(args))
 end
 
-function Split(s, delimiter)
-    local result = {}
-    for match in (s .. delimiter):gmatch("(.-)" .. delimiter) do
-        table.insert(result, match)
-    end
-    return result
-end
-
-local data = game:HttpGet("https://raw.githubusercontent.com/o7-Fire/Roblox-4/main/the-booth-plaza/bad_apple_frames.txt")
-local splitteddata = Split(data, "N")
+local url = "https://raw.githubusercontent.com/o7-Fire/Roblox-4/main/the-booth-plaza/bad_apple_frames.txt"
+local data = game:HttpGet(url)
 
 _G.Enabled = true
-for _, line in ipairs(splitteddata) do
-    if not _G.Enabled then
-        break -- Exit the loop if _G.Enabled is set to false
-    end
-    
-    local finalstring = ""
-    local currentd = 0
-    local linecount = 0
 
-    for i = 1, #line do
-        if linecount < 38 then
-            local chara = ""
-            if string.sub(line, i, i) == "A" then
-                chara = "⚫"
-            else
-                chara = "⚪"
-            end
-
-            if currentd ~= 50 then
-                finalstring = finalstring .. chara
-            else
-                finalstring = finalstring .. "\n" .. chara
-                currentd = 0
-                linecount += 1
-            end
-            currentd += 1
-        end
-    end
-
-    -- Send the final string via FireServer
-    update(finalstring)
-    
-    -- Small delay between updates
-    task.wait(0.03)
+if _G.Enabled then
+    update(data)  -- Send the entire text content
 end
