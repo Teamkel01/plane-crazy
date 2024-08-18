@@ -68,43 +68,45 @@ while _G.Enabled do
         local data = Split(node, " ")
         local index = tonumber(data[1]) + 1
         local anode = nodes[index]
-        
-        if anode then
-            local newPos = hrp.Position + Vector3.new(tonumber(data[3]) / 3, tonumber(data[4]) / 3, tonumber(data[2]) / 3) + Vector3.new(-70, 100, -150)
-            local tolookat = CFrame.lookAt(anode.Position, nodes[nodeconnection[index] + 1].Position)
-            
-            -- Calculate velocity
-            local velocity = Vector3.new()
-            if previousPositions[index] then
-                velocity = (newPos - previousPositions[index]) / 0.03 -- assuming 0.03 seconds between updates
-            end
-            previousPositions[index] = newPos
-            
-            -- Print details for debugging
-            print("Node Index: " .. index)
-            print("New Position: " .. tostring(newPos))
-            print("Velocity: " .. tostring(velocity))
-            
-            if anode:FindFirstChild("bbbg") then
-                anode.bbbg.CFrame = tolookat
-                anode.bbbp.Position = newPos
-            else
-                local bg = Instance.new("BodyGyro")
-                bg.Parent = anode
-                bg.Name = "bbbg"
-                bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-                bg.D = 100
-                bg.CFrame = tolookat
-                local bp = Instance.new("BodyPosition")
-                bp.Parent = anode
-                bp.Name = "bbbp"
-                bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                bp.P = 25000
-                bp.D = 1000
-                bp.Position = newPos
-            end
-        else
+
+        -- Debugging information
+        if not anode then
             print("Node not found for index: " .. index)
+            break
+        end
+        
+        local newPos = hrp.Position + Vector3.new(tonumber(data[3]) / 3, tonumber(data[4]) / 3, tonumber(data[2]) / 3) + Vector3.new(-70, 100, -150)
+        local tolookat = CFrame.lookAt(anode.Position, nodes[nodeconnection[index] + 1] and nodes[nodeconnection[index] + 1].Position or anode.Position)
+        
+        -- Calculate velocity
+        local velocity = Vector3.new()
+        if previousPositions[index] then
+            velocity = (newPos - previousPositions[index]) / 0.03 -- assuming 0.03 seconds between updates
+        end
+        previousPositions[index] = newPos
+        
+        -- Print details for debugging
+        print("Node Index: " .. index)
+        print("New Position: " .. tostring(newPos))
+        print("Velocity: " .. tostring(velocity))
+        
+        if anode:FindFirstChild("bbbg") then
+            anode.bbbg.CFrame = tolookat
+            anode.bbbp.Position = newPos
+        else
+            local bg = Instance.new("BodyGyro")
+            bg.Parent = anode
+            bg.Name = "bbbg"
+            bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            bg.D = 100
+            bg.CFrame = tolookat
+            local bp = Instance.new("BodyPosition")
+            bp.Parent = anode
+            bp.Name = "bbbp"
+            bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bp.P = 25000
+            bp.D = 1000
+            bp.Position = newPos
         end
     end
 end
