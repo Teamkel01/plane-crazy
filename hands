@@ -51,7 +51,7 @@ while _G.Enabled do
         break
     end
     task.wait(.03)
-    local r = game:HttpGet("http://192.168.0.167:8080/")
+    local r = game:HttpGet("http://192.168.0.248:8080/")
     for c, node in pairs(Split(r, "B")) do
         local data = Split(node, " ")
         local anode = nodes[data[1] + 1]
