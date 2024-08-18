@@ -79,7 +79,13 @@ while _G.Enabled do
             continue
         end
 
-        local index = tonumber(data[1]) + 1
+        local index = tonumber(data[1])
+        if not index then
+            print("Invalid index in node data:", data[1])
+            continue
+        end
+        index = index + 1
+        
         if not nodes[index] then
             print("Node index out of range:", index)
             continue
@@ -96,7 +102,13 @@ while _G.Enabled do
         end
 
         local pos = hrp.Position + Vector3.new(posX / 3, posY / 3, posZ / 3) + Vector3.new(-70, 100, -150)
-        local connectionIndex = nodeconnection[tonumber(data[1]) + 1] + 1
+        local connectionIndex = tonumber(nodeconnection[index])
+        if not connectionIndex then
+            print("Invalid connection node index:", nodeconnection[index])
+            continue
+        end
+        connectionIndex = connectionIndex + 1
+
         if not nodes[connectionIndex] then
             print("Connection node index out of range:", connectionIndex)
             continue
