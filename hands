@@ -74,10 +74,17 @@ while _G.Enabled do
             print("Node not found for index: " .. index)
             break
         end
+
+        local connectionNode = nodeconnection[index]
+        local connectedNode = nodes[connectionNode + 1]
+
+        if not connectedNode then
+            print("Connected node not found for index: " .. connectionNode + 1)
+        end
         
         local newPos = hrp.Position + Vector3.new(tonumber(data[3]) / 3, tonumber(data[4]) / 3, tonumber(data[2]) / 3) + Vector3.new(-70, 100, -150)
-        local tolookat = CFrame.lookAt(anode.Position, nodes[nodeconnection[index] + 1] and nodes[nodeconnection[index] + 1].Position or anode.Position)
-        
+        local tolookat = connectedNode and CFrame.lookAt(anode.Position, connectedNode.Position) or anode.CFrame
+
         -- Calculate velocity
         local velocity = Vector3.new()
         if previousPositions[index] then
