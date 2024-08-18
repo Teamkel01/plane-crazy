@@ -1,54 +1,56 @@
-
 function update(text)
-local args = {
-    [1] = text,
-    [2] = "Empty"
-}
+    local args = {
+        [1] = text,
+        [2] = "Empty"
+    }
 
-workspace.Stalls.Stall2.Edit:FireServer(unpack(args))
-
+    workspace.Stalls.Stall2.Edit:FireServer(unpack(args))
 end
 
-
 function Split(s, delimiter)
-   result = {};
-   for match in (s..delimiter):gmatch("(.-)"..delimiter) do
-       table.insert(result, match);
-   end
-   return result;
+    local result = {}
+    for match in (s .. delimiter):gmatch("(.-)" .. delimiter) do
+        table.insert(result, match)
+    end
+    return result
 end
 
 local data = game:HttpGet("https://raw.githubusercontent.com/o7-Fire/Roblox-4/main/the-booth-plaza/bad_apple_frames.txt")
 local splitteddata = Split(data, "N")
 
 _G.Enabled = true
-for fhnrteyrtnhi,line in pairs(splitteddata) do
-    if _G.Enabled then
-       local finalstring = ""
-       local currentd = 0
-       local linecount = 0
-       for i=1, #line do
-           if linecount < 38 then -- here you can change how high the thing is
-                -- this is because the format for it might be broken for other games
-               local chara = ""
-               --print("Chara " .. string.sub(line, i, i))
-               if string.sub(line, i, i) == "A" then
-                   chara = "⚫" 
-               else
-                   chara = "⚪" 
-               end
-               if currentd ~= 50 then
-                   finalstring ..= chara
-               else
-                   finalstring ..= "\n" .. chara
-                   currentd = 0
-                   linecount += 1
-               end
-               currentd += 1
-           end
-       end
-       --print(finalstring)
-       coroutine.wrap(update)(finalstring)
-       task.wait(.03)
-   end
+for _, line in ipairs(splitteddata) do
+    if not _G.Enabled then
+        break -- Exit the loop if _G.Enabled is set to false
+    end
+    
+    local finalstring = ""
+    local currentd = 0
+    local linecount = 0
+
+    for i = 1, #line do
+        if linecount < 38 then
+            local chara = ""
+            if string.sub(line, i, i) == "A" then
+                chara = "⚫"
+            else
+                chara = "⚪"
+            end
+
+            if currentd ~= 50 then
+                finalstring = finalstring .. chara
+            else
+                finalstring = finalstring .. "\n" .. chara
+                currentd = 0
+                linecount += 1
+            end
+            currentd += 1
+        end
+    end
+
+    -- Send the final string via FireServer
+    update(finalstring)
+    
+    -- Small delay between updates
+    task.wait(0.03)
 end
