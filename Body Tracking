@@ -1,6 +1,6 @@
 local nodes = {}
 local plr = game.Players.LocalPlayer
-local hrp = plr.Character.HumanoidRootPart
+local hrp = plr.Character:WaitForChild("HumanoidRootPart")
 local nodeconnection = {0, 12, 13, 14, 15, 16} -- Head, chest, elbows, hands
 
 function RandomVariable(length)
@@ -15,17 +15,17 @@ local DoCheck = RandomVariable(20)
 _G.DoCheck = DoCheck
 
 function Split(s, delimiter)
-    result = {};
+    local result = {}
     for match in (s..delimiter):gmatch("(.-)"..delimiter) do
-        table.insert(result, match);
+        table.insert(result, match)
     end
-    return result;
+    return result
 end
 
 local function zeroGrav(part)
     if not part:FindFirstChild("BodyForce") then 
         local temp = Instance.new("BodyForce")
-        temp.Force = part:GetMass() * Vector3.new(0,workspace.Gravity,0)
+        temp.Force = part:GetMass() * Vector3.new(0, workspace.Gravity, 0)
         temp.Parent = part
     end
 end
@@ -56,11 +56,22 @@ while _G.Enabled do
     end
     task.wait(.03)
     local r = game:HttpGet("http://192.168.0.248:8080/")
+    print("Received data:", r)  -- Debugging: Print received data
+
     for c, node in pairs(Split(r, "B")) do
         local data = Split(node, " ")
-        local anode = nodes[data[1] + 1]  -- Get the block corresponding to the landmark
-        local pos = hrp.Position + Vector3.new(data[3] / 3, data[4] / 3, data[2] / 3) + Vector3.new(-70, 100, -150)
-        local tolookat = CFrame.lookAt(anode.Position, nodes[nodeconnection[data[1] + 1] + 1].Position)
+        local index = tonumber(data[1]) + 1  -- Convert data[1] to number
+        local anode = nodes[index]
+        
+        if not anode then
+            print("Node not found for index:", index)  -- Debugging: Print missing node
+            continue
+        end
+
+        local pos = hrp.Position + Vector3.new(tonumber(data[3]) / 3, tonumber(data[4]) / 3, tonumber(data[2]) / 3) + Vector3.new(-70, 100, -150)
+        local lookAtPosition = nodes[nodeconnection[tonumber(data[1]) + 1] + 1].Position
+        local tolookat = CFrame.lookAt(anode.Position, lookAtPosition)
+        
         if anode:FindFirstChild("bbbg") then
             anode.bbbg.CFrame = tolookat
             anode.bbbp.Position = pos
@@ -71,6 +82,7 @@ while _G.Enabled do
             bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
             bg.D = 100
             bg.CFrame = tolookat
+
             local bp = Instance.new("BodyPosition")
             bp.Parent = anode
             bp.Name = "bbbp"
