@@ -1,101 +1,66 @@
-local nodes = {}
+local nodes = {} -- List to store nodes (blocks)
 local plr = game.Players.LocalPlayer
-local hrp = plr.Character:WaitForChild("HumanoidRootPart")
-local nodeconnection = {0, 12, 13, 14, 15, 16} -- Head, chest, elbows, hands
+local hrp = plr.Character.HumanoidRootPart
+local greenBlockColor = Color3.fromRGB(0, 255, 0) -- Green color
+local url = "http://192.168.0.248:8080/" -- URL for the Python server
 
-function RandomVariable(length)
-    local res = ""
-    for i = 1, length do
-        res = res .. string.char(math.random(97, 122))
-    end
-    return res
-end
-
-local DoCheck = RandomVariable(20)
-_G.DoCheck = DoCheck
-
-function Split(s, delimiter)
-    local result = {}
-    for match in (s..delimiter):gmatch("(.-)"..delimiter) do
-        table.insert(result, match)
-    end
-    return result
-end
-
-local function zeroGrav(part)
-    if not part:FindFirstChild("BodyForce") then 
-        local temp = Instance.new("BodyForce")
-        temp.Force = part:GetMass() * Vector3.new(0, workspace.Gravity, 0)
-        temp.Parent = part
+-- Function to get hand data from the Python server
+local function getHeadData()
+    local success, response = pcall(function()
+        return game:GetService("HttpService"):GetAsync(url)
+    end)
+    if success then
+        return response
+    else
+        warn("Failed to fetch head data")
+        return "{}"
     end
 end
 
-_G.Enabled = true
-if _G.Enabled then
-    for i = 0, 16 do
-        for _, v in pairs(game.Workspace[plr.Name .. "Aircraft"]:GetDescendants()) do
-            if v:IsA("BasePart") then
-                if v.Color == Color3.fromRGB(0, 255, 0) or  -- Green (Head)
-                   v.Color == Color3.fromRGB(255, 255, 0) or  -- Yellow (Hands)
-                   v.Color == Color3.fromRGB(255, 0, 0) or  -- Red (Elbows)
-                   v.Color == Color3.fromRGB(0, 0, 255) then  -- Blue (Chest)
-                    table.insert(nodes, v)
-                end
-                zeroGrav(v)
-                v.CanCollide = false
-            end
-        end
-        task.wait(.03)
-    end
-end
-
-while _G.Enabled do
-    if _G.DoCheck ~= DoCheck then
-        break
-    end
-    task.wait(.03)
-    local r = game:HttpGet("http://192.168.0.248:8080/")
-    print("Received Data:", r)  -- Debugging: Print received data
-    local data = Split(r, "B")
-
-    for _, node in pairs(data) do
-        local parts = Split(node, " ")
-        if #parts < 4 then
-            print("Skipping incomplete data:", node)  -- Debugging: Skip incomplete data
-            continue
-        end
-        local id = tonumber(parts[1]) + 1
-        local anode = nodes[id]
-        if not anode then
-            print("Node not found for index:", id)  -- Debugging: Print missing node
-            continue
-        end
-        local pos = hrp.Position + Vector3.new(tonumber(parts[3]) / 3, tonumber(parts[4]) / 3, tonumber(parts[2]) / 3) + Vector3.new(-70, 100, -150)
-        local lookAtNode = nodes[nodeconnection[tonumber(parts[1]) + 1] + 1]
-        if not lookAtNode then
-            print("LookAtNode not found for index:", nodeconnection[tonumber(parts[1]) + 1])  -- Debugging: Print missing node
-            continue
-        end
-        local lookAtCFrame = CFrame.lookAt(anode.Position, lookAtNode.Position)
-        
-        if anode:FindFirstChild("bbbg") then
-            anode.bbbg.CFrame = lookAtCFrame
-            anode.bbbp.Position = pos
-        else
+-- Function to create and initialize green blocks
+local function initializeBlocks()
+    for _, part in pairs(workspace:GetDescendants()) do
+        if part:IsA("BasePart") and part.Color == greenBlockColor then
+            table.insert(nodes, part)
+            part.CanCollide = false
+            -- Ensure each block has BodyGyro and BodyPosition
             local bg = Instance.new("BodyGyro")
-            bg.Parent = anode
-            bg.Name = "bbbg"
+            bg.Parent = part
             bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
             bg.D = 100
-            bg.CFrame = lookAtCFrame
-
             local bp = Instance.new("BodyPosition")
-            bp.Parent = anode
-            bp.Name = "bbbp"
+            bp.Parent = part
             bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
             bp.P = 25000
             bp.D = 1000
-            bp.Position = pos
         end
     end
+end
+
+-- Function to update block positions and rotations based on head data
+local function updateBlocks()
+    local data = getHeadData()
+    local headData = game:GetService("HttpService"):JSONDecode(data)
+
+    for id, posData in pairs(headData) do
+        -- Assume the head data corresponds to the green block
+        local node = nodes[1] -- Using the first node (green block)
+        if node then
+            local pos = hrp.Position + Vector3.new(posData.x / 3, posData.y / 3, posData.z / 3) + Vector3.new(-70, 100, -150)
+            node.Position = pos
+            -- Assuming rotation data can be applied
+            local lookAt = CFrame.lookAt(node.Position, hrp.Position)
+            node.BodyGyro.CFrame = lookAt
+            node.BodyPosition.Position = pos
+        end
+    end
+end
+
+-- Initialization
+initializeBlocks()
+
+-- Main loop to update blocks every 0.03 seconds
+while true do
+    updateBlocks()
+    wait(0.03)
 end
