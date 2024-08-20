@@ -14,7 +14,7 @@ local DoCheck = RandomVariable(20)
 _G.DoCheck = DoCheck
 
 function Split(s, delimiter)
-    result = {}
+    local result = {}
     for match in (s..delimiter):gmatch("(.-)"..delimiter) do
         table.insert(result, match)
     end
@@ -57,7 +57,7 @@ while _G.Enabled do
         local parts = Split(node, " ")
         local anode = nodes[tonumber(parts[1]) + 1]
         local pos = hrp.Position + Vector3.new(tonumber(parts[3]) / 3, tonumber(parts[4]) / 3, tonumber(parts[2]) / 3) + Vector3.new(-70, 100, -150)
-        local tolookat = CFrame.lookAt(anode.Position, hrp.Position)  -- Adjust as needed
+        local tolookat = CFrame.lookAt(anode.Position, hrp.Position)
         if anode:FindFirstChild("bbbg") then
             anode.bbbg.CFrame = tolookat
             anode.bbbp.Position = pos
