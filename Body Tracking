@@ -55,12 +55,14 @@ while _G.Enabled do
     end
     task.wait(.03)
     local r = game:HttpGet("http://192.168.0.248:8080/")
+    print("Received Data:", r)  -- Debugging: Print received data
     local data = Split(r, "B")
-    
+
     for _, node in pairs(data) do
         local parts = Split(node, " ")
         if #parts < 4 then
-            continue  -- Skip if not enough data
+            print("Skipping incomplete data:", node)  -- Debugging: Skip incomplete data
+            continue
         end
         local id = tonumber(parts[1]) + 1
         local anode = nodes[id]
