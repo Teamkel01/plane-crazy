@@ -1,66 +1,80 @@
-local nodes = {} -- List to store nodes (blocks)
+local nodes = {}
 local plr = game.Players.LocalPlayer
 local hrp = plr.Character.HumanoidRootPart
-local greenBlockColor = Color3.fromRGB(0, 255, 0) -- Green color
-local url = "http://192.168.0.248:8080/" -- URL for the Python server
+local nodeconnection = {9, 0, 1, 2, 3, 0, 5, 6, 7, 0, 9, 10, 11, 0, 13, 14, 15, 0, 17, 18, 19}
 
--- Function to get hand data from the Python server
-local function getHeadData()
-    local success, response = pcall(function()
-        return game:GetService("HttpService"):GetAsync(url)
-    end)
-    if success then
-        return response
-    else
-        warn("Failed to fetch head data")
-        return "{}"
+function RandomVariable(length)
+    local res = ""
+    for i = 1, length do
+        res = res .. string.char(math.random(97, 122))
+    end
+    return res
+end
+local DoCheck = RandomVariable(20)
+_G.DoCheck = DoCheck
+
+function Split(s, delimiter)
+    result = {}
+    for match in (s..delimiter):gmatch("(.-)"..delimiter) do
+        table.insert(result, match)
+    end
+    return result
+end
+
+local function zeroGrav(part)
+    if not part:FindFirstChild("BodyForce") then 
+        local temp = Instance.new("BodyForce")
+        temp.Force = part:GetMass() * Vector3.new(0, workspace.Gravity, 0)
+        temp.Parent = part
     end
 end
 
--- Function to create and initialize green blocks
-local function initializeBlocks()
-    for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("BasePart") and part.Color == greenBlockColor then
-            table.insert(nodes, part)
-            part.CanCollide = false
-            -- Ensure each block has BodyGyro and BodyPosition
+_G.Enabled = true
+if _G.Enabled then
+    for i = 0, 20, 1 do
+        for _, v in pairs(game.Workspace[plr.Name .. "Aircraft"]:GetDescendants()) do
+            if v:IsA("BasePart") then
+                if v.Color == Color3.fromRGB(i, i, i) then
+                    table.insert(nodes, v)
+                end
+                zeroGrav(v)
+                v.CanCollide = false
+            end
+        end
+        task.wait(.03)
+    end
+end
+
+while _G.Enabled do
+    if _G.DoCheck ~= DoCheck then
+        break
+    end
+    task.wait(.03)
+    local r = game:HttpGet("http://192.168.0.248:8080/")
+    local data = game:GetService("HttpService"):JSONDecode(r)
+    local nodesData = Split(data["data"], "B")
+    for _, node in pairs(nodesData) do
+        local parts = Split(node, " ")
+        local anode = nodes[tonumber(parts[1]) + 1]
+        local pos = hrp.Position + Vector3.new(tonumber(parts[3]) / 3, tonumber(parts[4]) / 3, tonumber(parts[2]) / 3) + Vector3.new(-70, 100, -150)
+        local tolookat = CFrame.lookAt(anode.Position, hrp.Position)  -- Adjust as needed
+        if anode:FindFirstChild("bbbg") then
+            anode.bbbg.CFrame = tolookat
+            anode.bbbp.Position = pos
+        else
             local bg = Instance.new("BodyGyro")
-            bg.Parent = part
+            bg.Parent = anode
+            bg.Name = "bbbg"
             bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
             bg.D = 100
+            bg.CFrame = tolookat
             local bp = Instance.new("BodyPosition")
-            bp.Parent = part
+            bp.Parent = anode
+            bp.Name = "bbbp"
             bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
             bp.P = 25000
             bp.D = 1000
+            bp.Position = pos
         end
     end
-end
-
--- Function to update block positions and rotations based on head data
-local function updateBlocks()
-    local data = getHeadData()
-    local headData = game:GetService("HttpService"):JSONDecode(data)
-
-    for id, posData in pairs(headData) do
-        -- Assume the head data corresponds to the green block
-        local node = nodes[1] -- Using the first node (green block)
-        if node then
-            local pos = hrp.Position + Vector3.new(posData.x / 3, posData.y / 3, posData.z / 3) + Vector3.new(-70, 100, -150)
-            node.Position = pos
-            -- Assuming rotation data can be applied
-            local lookAt = CFrame.lookAt(node.Position, hrp.Position)
-            node.BodyGyro.CFrame = lookAt
-            node.BodyPosition.Position = pos
-        end
-    end
-end
-
--- Initialization
-initializeBlocks()
-
--- Main loop to update blocks every 0.03 seconds
-while true do
-    updateBlocks()
-    wait(0.03)
 end
